@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:instrumental/screens/add_routine_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:instrumental/providers/practice_provider.dart';
 
@@ -42,7 +43,12 @@ class RoutineListScreen extends StatelessWidget {
 
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          print('Add new routine button clicked!');
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AddRoutineScreen()
+            )
+          );
         },
         child: const Icon(Icons.add)
       ),
