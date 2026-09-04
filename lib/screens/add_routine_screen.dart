@@ -4,7 +4,7 @@ import 'package:instrumental/providers/practice_provider.dart';
 import 'package:provider/provider.dart';
 
 class AddRoutineScreen extends StatefulWidget {
-  const AddRoutineScreen({ super.key });
+  const AddRoutineScreen({super.key});
 
   @override
   State<AddRoutineScreen> createState() => _AddRoutineScreenState();
@@ -23,11 +23,8 @@ class _AddRoutineScreenState extends State<AddRoutineScreen> {
       appBar: AppBar(
         title: const Text('New Routine'),
         actions: [
-          IconButton(
-            onPressed: _saveRoutine, 
-            icon: const Icon(Icons.save)
-            )
-        ]
+          IconButton(onPressed: _saveRoutine, icon: const Icon(Icons.save)),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -56,13 +53,13 @@ class _AddRoutineScreenState extends State<AddRoutineScreen> {
                 initialValue: _selectedInstrument,
                 decoration: const InputDecoration(
                   labelText: 'Instrument',
-                  border: OutlineInputBorder()
+                  border: OutlineInputBorder(),
                 ),
 
                 items: Instrument.values.map((Instrument instrument) {
                   return DropdownMenuItem<Instrument>(
                     value: instrument,
-                    child: Text(instrument.name.toUpperCase())
+                    child: Text(instrument.name.toUpperCase()),
                   );
                 }).toList(),
                 onChanged: (Instrument? newValue) {
@@ -72,11 +69,11 @@ class _AddRoutineScreenState extends State<AddRoutineScreen> {
                     });
                   }
                 },
-              )
+              ),
             ],
-          )
-        )
-      )
+          ),
+        ),
+      ),
     );
   }
 
@@ -90,11 +87,7 @@ class _AddRoutineScreenState extends State<AddRoutineScreen> {
     if (_formKey.currentState!.validate()) {
       final provider = context.read<PracticeProvider>();
 
-      provider.addRoutine(
-        _titleController.text, 
-        _selectedInstrument,
-        []
-      );
+      provider.addRoutine(_titleController.text, _selectedInstrument, []);
 
       Navigator.of(context).pop();
     }
