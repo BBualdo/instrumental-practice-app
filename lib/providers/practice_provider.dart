@@ -50,6 +50,31 @@ class PracticeProvider extends ChangeNotifier {
     _routines.add(newRoutine);
     notifyListeners();
   }
+
+  void addExerciseToRoutine({
+    required String routineId,
+    required String title,
+    required int duration,
+    String? description,
+    String? relatedLink,
+    String? statisticName,
+  }) {
+    final newExercise = Exercise(
+      id: DateTime.now().toString(),
+      title: title,
+      description: description?.isEmpty == true ? null : description,
+      durationMinutes: duration,
+      relatedLink: relatedLink?.isEmpty == true ? null : relatedLink,
+      statisticName: statisticName?.isEmpty == true ? null : statisticName,
+    );
+
+    _exercises.add(newExercise);
+
+    final routine = _routines.firstWhere((routine) => routine.id == routineId);
+    routine.exercises.add(newExercise);
+
+    notifyListeners();
+  }
  
   void _seedExampleData() {
     _exercises.addAll([

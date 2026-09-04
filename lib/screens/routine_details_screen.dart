@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:instrumental/providers/practice_provider.dart';
+import 'package:instrumental/screens/add_exercise_screen.dart';
 import 'package:provider/provider.dart';
 
 class RoutineDetailsScreen extends StatelessWidget {
@@ -35,7 +36,12 @@ class RoutineDetailsScreen extends StatelessWidget {
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          print('Open exercise form');
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AddExerciseScreen(routineId: routineId),
+            ),
+          );
         },
         child: const Icon(Icons.add),
       ),
