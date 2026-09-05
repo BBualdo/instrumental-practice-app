@@ -1,8 +1,7 @@
 import 'dart:async';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:instrumental/models/exercise.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class ExerciseExecutionSheet extends StatefulWidget {
   final Exercise exercise;
@@ -22,6 +21,7 @@ class _ExerciseExecutionSheetState extends State<ExerciseExecutionSheet> {
   Timer? _timer;
   late int _remainingSeconds;
   bool _isRunning = false;
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   Widget build(BuildContext context) {
@@ -99,6 +99,8 @@ class _ExerciseExecutionSheetState extends State<ExerciseExecutionSheet> {
   @override
   void dispose() {
     _timer?.cancel();
+    _audioPlayer.dispose();
+
     super.dispose();
   }
 
@@ -108,11 +110,14 @@ class _ExerciseExecutionSheetState extends State<ExerciseExecutionSheet> {
       setState(() => _isRunning = false);
     } else {
       setState(() => _isRunning = true);
-      _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      _timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
         if (_remainingSeconds > 0) {
           setState(() => _remainingSeconds--);
         } else {
           _timer?.cancel();
+
+          await _audioPlayer.play(AssetSource('audio/ping.mp3'));
+
           widget.onComplete();
         }
       });
