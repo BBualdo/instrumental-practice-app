@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:instrumental/models/instrument.dart';
 import 'package:instrumental/providers/practice_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -18,6 +19,7 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
   final _durationController = TextEditingController();
   final _relatedLinkController = TextEditingController();
   final _statisticNameController = TextEditingController();
+  Instrument _selectedInstrument = Instrument.guitar;
 
   @override
   Widget build(BuildContext context) {
@@ -59,6 +61,30 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                 ),
                 validator: (value) {
                   return null;
+                },
+              ),
+
+              const SizedBox(height: 20),
+
+              DropdownButtonFormField<Instrument>(
+                initialValue: _selectedInstrument,
+                decoration: const InputDecoration(
+                  labelText: 'Instrument',
+                  border: OutlineInputBorder(),
+                ),
+
+                items: Instrument.values.map((Instrument instrument) {
+                  return DropdownMenuItem<Instrument>(
+                    value: instrument,
+                    child: Text(instrument.name.toUpperCase()),
+                  );
+                }).toList(),
+                onChanged: (Instrument? newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      _selectedInstrument = newValue;
+                    });
+                  }
                 },
               ),
 
@@ -130,13 +156,13 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
     if (_formKey.currentState!.validate()) {
       final provider = context.read<PracticeProvider>();
 
-      provider.addExerciseToRoutine(
-        routineId: widget.routineId,
+      provider.addExercise(
         title: _titleController.text,
         duration: int.parse(_durationController.text),
         description: _descriptionController.text,
         relatedLink: _relatedLinkController.text,
         statisticName: _statisticNameController.text,
+        instrument: _selectedInstrument,
       );
 
       Navigator.of(context).pop();

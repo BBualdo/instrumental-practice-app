@@ -30,7 +30,7 @@ class RoutineListScreen extends StatelessWidget {
                 leading: const Icon(Icons.library_music),
                 title: Text(routine.title),
                 subtitle: Text(
-                  'Instrument: ${routine.instrument.name} | Exercises: ${routine.exercises.length}',
+                  'Instrument: ${routine.instrument.name} | Exercises: ${routine.exerciseIds.length}',
                 ),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {

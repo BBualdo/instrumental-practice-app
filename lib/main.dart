@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:instrumental/providers/practice_provider.dart';
-import 'package:instrumental/screens/routine_list_screen.dart';
+import 'package:instrumental/screens/main_screen.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -25,7 +25,7 @@ class InstrumentalApp extends StatelessWidget {
           ),
           useMaterial3: true,
       ),
-      home: const RoutineListScreen()
+      home: const MainScreen()
     );
   }
 }

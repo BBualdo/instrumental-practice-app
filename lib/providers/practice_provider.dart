@@ -13,20 +13,29 @@ class PracticeProvider extends ChangeNotifier {
 
   List<Exercise> get exercises => _exercises;
 
-  List<Exercise> get activeExercises => _exercises.where((exercise) => exercise.isActive).toList();
+  List<Exercise> get activeExercises =>
+      _exercises.where((exercise) => exercise.isActive).toList();
 
   List<Routine> get routines => _routines;
 
-  void addExercise(String title, String description, int durationMinutes, String? relatedLink, String? statisticName) {
+  void addExercise({
+    required String title,
+    required int duration,
+    required Instrument instrument,
+    String? description,
+    String? relatedLink,
+    String? statisticName,
+  }) {
     final newExercise = Exercise(
       id: DateTime.now().toString(),
       title: title,
       description: description,
-      durationMinutes: durationMinutes,
+      durationMinutes: duration,
+      instrument: instrument,
       relatedLink: relatedLink,
       statisticName: statisticName,
     );
-  
+
     _exercises.add(newExercise);
     notifyListeners();
   }
@@ -39,52 +48,52 @@ class PracticeProvider extends ChangeNotifier {
     }
   }
 
-  void addRoutine(String title, Instrument instrument, List<Exercise> exercises) {
+  void addRoutine(
+    String title,
+    Instrument instrument,
+    List<String> exerciseIds,
+  ) {
     final newRoutine = Routine(
-      id: DateTime.now().toString(), 
-      title: title, 
+      id: DateTime.now().toString(),
+      title: title,
       instrument: instrument,
-      exercises: exercises,
-      );
+      exerciseIds: exerciseIds,
+    );
 
     _routines.add(newRoutine);
     notifyListeners();
   }
 
-  void addExerciseToRoutine({
-    required String routineId,
-    required String title,
-    required int duration,
-    String? description,
-    String? relatedLink,
-    String? statisticName,
-  }) {
-    final newExercise = Exercise(
-      id: DateTime.now().toString(),
-      title: title,
-      description: description?.isEmpty == true ? null : description,
-      durationMinutes: duration,
-      relatedLink: relatedLink?.isEmpty == true ? null : relatedLink,
-      statisticName: statisticName?.isEmpty == true ? null : statisticName,
-    );
-
-    _exercises.add(newExercise);
-
+  List<Exercise> getExercisesForRoutine(String routineId) {
     final routine = _routines.firstWhere((routine) => routine.id == routineId);
-    routine.exercises.add(newExercise);
 
-    notifyListeners();
+    return routine.exerciseIds
+        .map(
+          (exerciseId) =>
+              _exercises.firstWhere((exercise) => exercise.id == exerciseId),
+        )
+        .where((exercise) => exercise.isActive)
+        .toList();
   }
 
-  void completeExercise(String routineId, String exerciseId, {int? statValue}) {
-    final routine = _routines.firstWhere((routine) => routine.id == routineId);
-    final exercise = routine.exercises.firstWhere((exercise) => exercise.id == exerciseId);
+  List<Exercise> getAvailableExercisesForInstrument(Instrument instrument) {
+    return _exercises
+        .where(
+          (exercise) => exercise.isActive && exercise.instrument == instrument,
+        )
+        .toList();
+  }
 
+  void completeExercise(String exerciseId, {int? statValue}) {
+    final exercise = _exercises.firstWhere(
+      (exercise) => exercise.id == exerciseId,
+    );
     exercise.isCompleted = true;
 
     if (statValue != null) {
       exercise.lastStatistic = statValue;
-      if (exercise.highestStatistic == null || statValue > exercise.highestStatistic!) {
+      if (exercise.highestStatistic == null ||
+          statValue > exercise.highestStatistic!) {
         exercise.highestStatistic = statValue;
       }
     }
@@ -96,8 +105,8 @@ class PracticeProvider extends ChangeNotifier {
     if (oldIndex == newIndex) return;
 
     final routine = _routines.firstWhere((routine) => routine.id == routineId);
-    final exercise = routine.exercises.removeAt(oldIndex);
-    routine.exercises.insert(newIndex, exercise);
+    final exercise = routine.exerciseIds.removeAt(oldIndex);
+    routine.exerciseIds.insert(newIndex, exercise);
 
     notifyListeners();
   }
@@ -105,43 +114,67 @@ class PracticeProvider extends ChangeNotifier {
   void resetRoutineProgress(String routineId) {
     final routine = _routines.firstWhere((routine) => routine.id == routineId);
 
-    for (var exercise in routine.exercises) {
+    for (var exerciseId in routine.exerciseIds) {
+      final exercise = _exercises.firstWhere(
+        (exercise) => exercise.id == exerciseId,
+      );
       exercise.isCompleted = false;
     }
 
     notifyListeners();
   }
- 
+
+  void toggleExerciseInRoutine(String routineId, String exerciseId) {
+    final routine = _routines.firstWhere((routine) => routine.id == routineId);
+
+    if (routine.exerciseIds.contains(exerciseId)) {
+      routine.exerciseIds.remove(exerciseId);
+    } else {
+      routine.exerciseIds.add(exerciseId);
+    }
+
+    notifyListeners();
+  }
+
   void _seedExampleData() {
     _exercises.addAll([
       Exercise(
         id: 'e1',
-        title: 'One Minute Changes: Am - D',  
+        title: 'One Minute Changes: Am - D',
         description: 'Play them as fast as you can in one minute.',
         durationMinutes: 1,
-        statisticName: 'Chord Changes'
+        statisticName: 'Chord Changes',
+        instrument: Instrument.guitar,
       ),
       Exercise(
         id: 'e2',
         title: 'One Minute Changes: C - G',
         description: 'Play them as fast as you can in one minute.',
         durationMinutes: 1,
-        statisticName: 'Chord Changes'
+        statisticName: 'Chord Changes',
+        instrument: Instrument.guitar,
       ),
       Exercise(
         id: 'e3',
         title: 'Eb Minor Scale',
-        description: 'Play the Eb minor scale - chords in left, melody in right.',
+        description:
+            'Play the Eb minor scale - chords in left, melody in right.',
         durationMinutes: 5,
-        statisticName: 'BPM'
+        statisticName: 'BPM',
+        instrument: Instrument.piano,
       ),
     ]);
 
-    _routines.add(Routine(
-      id: 'r1', 
-      title: 'Beginner Module 4', 
-      instrument: Instrument.guitar, 
-      exercises: _exercises
-    ));
+    _routines.add(
+      Routine(
+        id: 'r1',
+        title: 'Beginner Module 4',
+        instrument: Instrument.guitar,
+        exerciseIds: _exercises
+            .where((exercise) => exercise.instrument == Instrument.guitar)
+            .map((exercise) => exercise.id)
+            .toList(),
+      ),
+    );
   }
 }

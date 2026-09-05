@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:instrumental/providers/practice_provider.dart';
-import 'package:instrumental/screens/add_exercise_screen.dart';
 import 'package:instrumental/widgets/exercise_execution_sheet.dart';
 import 'package:provider/provider.dart';
 
@@ -15,10 +14,11 @@ class RoutineDetailsScreen extends StatelessWidget {
     final routine = provider.routines.firstWhere(
       (routine) => routine.id == routineId,
     );
+    final exercises = provider.getExercisesForRoutine(routineId);
 
     final isRoutineCompleted =
-        routine.exercises.isNotEmpty &&
-        routine.exercises.every((exercise) => exercise.isCompleted);
+        exercises.isNotEmpty &&
+        exercises.every((exercise) => exercise.isCompleted);
 
     return Scaffold(
       appBar: AppBar(
@@ -33,15 +33,15 @@ class RoutineDetailsScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: routine.exercises.isEmpty
+      body: exercises.isEmpty
           ? const Center(child: Text('No exercises yet. Add your first!'))
           : ReorderableListView.builder(
-              itemCount: routine.exercises.length,
+              itemCount: exercises.length,
               onReorderItem: (oldIndex, newIndex) {
                 provider.reorderExercises(routineId, oldIndex, newIndex);
               },
               itemBuilder: (context, index) {
-                final exercise = routine.exercises[index];
+                final exercise = exercises[index];
 
                 return ListTile(
                   key: ValueKey(exercise.id),
@@ -71,7 +71,6 @@ class RoutineDetailsScreen extends StatelessWidget {
 
                           if (context.mounted) {
                             context.read<PracticeProvider>().completeExercise(
-                              routineId,
                               exercise.id,
                               statValue: statValue,
                             );
@@ -108,15 +107,9 @@ class RoutineDetailsScreen extends StatelessWidget {
             )
           : FloatingActionButton(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        AddExerciseScreen(routineId: routineId),
-                  ),
-                );
+                print('Open exercise selection screen');
               },
-              child: const Icon(Icons.add),
+              child: const Icon(Icons.edit),
             ),
     );
   }
