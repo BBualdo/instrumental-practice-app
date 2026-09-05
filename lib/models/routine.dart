@@ -12,4 +12,20 @@ class Routine {
     required this.instrument,
     required this.exerciseIds,
   });
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'title': title,
+    'instrument': instrument.name,
+    'exerciseIds': exerciseIds,
+  };
+
+  factory Routine.fromJson(Map<String, dynamic> json) {
+    return Routine(
+      id: json['id'],
+      title: json['title'],
+      instrument: Instrument.values.firstWhere((e) => e.name == json['instrument']),
+      exerciseIds: List<String>.from(json['exerciseIds'] ?? []),
+    );
+  }
 }

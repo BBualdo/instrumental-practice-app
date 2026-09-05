@@ -1,14 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:instrumental/models/exercise.dart';
 import 'package:instrumental/models/instrument.dart';
 import 'package:instrumental/models/routine.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class PracticeProvider extends ChangeNotifier {
   final List<Exercise> _exercises = [];
   final List<Routine> _routines = [];
 
   PracticeProvider() {
-    _seedExampleData();
+    loadFromStorage();
   }
 
   List<Exercise> get exercises => _exercises;
@@ -48,14 +52,18 @@ class PracticeProvider extends ChangeNotifier {
     );
 
     _exercises.add(newExercise);
+
     notifyListeners();
+    unawaited(saveToStorage());
   }
 
   void archiveExercise(String id) {
     final index = _exercises.indexWhere((exercise) => exercise.id == id);
     if (index != -1) {
       _exercises[index].isActive = false;
+
       notifyListeners();
+      unawaited(saveToStorage());
     }
   }
 
@@ -63,7 +71,9 @@ class PracticeProvider extends ChangeNotifier {
     final index = _exercises.indexWhere((exercise) => exercise.id == id);
     if (index != -1) {
       _exercises[index].isActive = true;
+
       notifyListeners();
+      unawaited(saveToStorage());
     }
   }
 
@@ -73,7 +83,9 @@ class PracticeProvider extends ChangeNotifier {
     }
 
     _exercises.removeWhere((exercise) => exercise.id == id);
+
     notifyListeners();
+    unawaited(saveToStorage());
   }
 
   void updateExercise({
@@ -105,6 +117,7 @@ class PracticeProvider extends ChangeNotifier {
     _exercises[index] = updatedExercise;
 
     notifyListeners();
+    unawaited(saveToStorage());
   }
 
   void addRoutine(
@@ -120,7 +133,9 @@ class PracticeProvider extends ChangeNotifier {
     );
 
     _routines.add(newRoutine);
+
     notifyListeners();
+    unawaited(saveToStorage());
   }
 
   List<Exercise> getExercisesForRoutine(String routineId) {
@@ -153,6 +168,7 @@ class PracticeProvider extends ChangeNotifier {
     }
 
     notifyListeners();
+    unawaited(saveToStorage());
   }
 
   void reorderExercises(String routineId, int oldIndex, int newIndex) {
@@ -163,6 +179,7 @@ class PracticeProvider extends ChangeNotifier {
     routine.exerciseIds.insert(newIndex, exercise);
 
     notifyListeners();
+    unawaited(saveToStorage());
   }
 
   void resetRoutineProgress(String routineId) {
@@ -174,6 +191,7 @@ class PracticeProvider extends ChangeNotifier {
     }
 
     notifyListeners();
+    unawaited(saveToStorage());
   }
 
   void toggleExerciseInRoutine(String routineId, String exerciseId) {
@@ -186,47 +204,36 @@ class PracticeProvider extends ChangeNotifier {
     }
 
     notifyListeners();
+    unawaited(saveToStorage());
   }
 
-  void _seedExampleData() {
-    _exercises.addAll([
-      Exercise(
-        id: 'e1',
-        title: 'One Minute Changes: Am - D',
-        description: 'Play them as fast as you can in one minute.',
-        durationMinutes: 1,
-        statisticName: 'Chord Changes',
-        instrument: Instrument.guitar,
-      ),
-      Exercise(
-        id: 'e2',
-        title: 'One Minute Changes: C - G',
-        description: 'Play them as fast as you can in one minute.',
-        durationMinutes: 1,
-        statisticName: 'Chord Changes',
-        instrument: Instrument.guitar,
-      ),
-      Exercise(
-        id: 'e3',
-        title: 'Eb Minor Scale',
-        description:
-            'Play the Eb minor scale - chords in left, melody in right.',
-        durationMinutes: 5,
-        statisticName: 'BPM',
-        instrument: Instrument.piano,
-      ),
-    ]);
+  Future<void> saveToStorage() async {
+    final prefs = await SharedPreferences.getInstance();
 
-    _routines.add(
-      Routine(
-        id: 'r1',
-        title: 'Beginner Module 4',
-        instrument: Instrument.guitar,
-        exerciseIds: _exercises
-            .where((exercise) => exercise.instrument == Instrument.guitar)
-            .map((exercise) => exercise.id)
-            .toList(),
-      ),
-    );
+    final exercisesJson = jsonEncode(_exercises.map((exercise) => exercise.toJson()).toList());
+    final routinesJson = jsonEncode(_routines.map((routine) => routine.toJson()).toList());
+
+    await prefs.setString('exercises_data', exercisesJson);
+    await prefs.setString('routines_data', routinesJson);
+  }
+
+  Future<void> loadFromStorage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final exercisesString = prefs.getString('exercises_data');
+    final routinesString = prefs.getString('routines_data');
+
+    if (exercisesString != null) {
+      final List decoded = jsonDecode(exercisesString);
+      _exercises.clear();
+      _exercises.addAll(decoded.map((json) => Exercise.fromJson(json)).toList());
+    }
+
+    if (routinesString != null) {
+      final List decoded = jsonDecode(routinesString);
+      _routines.clear();
+      _routines.addAll(decoded.map((json) => Routine.fromJson(json)).toList());
+    }
+
+    notifyListeners();
   }
 }
