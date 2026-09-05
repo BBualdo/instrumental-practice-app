@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:instrumental/providers/practice_provider.dart';
+import 'package:instrumental/screens/routine_exercise_selection_screen.dart';
 import 'package:instrumental/widgets/exercise_execution_sheet.dart';
 import 'package:provider/provider.dart';
 
@@ -36,7 +37,7 @@ class RoutineDetailsScreen extends StatelessWidget {
           : ReorderableListView.builder(
               itemCount: exercises.length,
               onReorderItem: (oldIndex, newIndex) {
-                provider.reorderExercises(routineId, oldIndex, newIndex);
+                context.read<PracticeProvider>().reorderExercises(routineId, oldIndex, newIndex);
               },
               itemBuilder: (context, index) {
                 final exercise = exercises[index];
@@ -83,7 +84,7 @@ class RoutineDetailsScreen extends StatelessWidget {
       floatingActionButton: isRoutineCompleted
           ? FloatingActionButton.extended(
               onPressed: () {
-                provider.resetRoutineProgress(routine.id);
+                context.read<PracticeProvider>().resetRoutineProgress(routine.id);
 
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -105,7 +106,12 @@ class RoutineDetailsScreen extends StatelessWidget {
             )
           : FloatingActionButton(
               onPressed: () {
-                print('Open exercise selection screen');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => RoutineExerciseSelectionScreen(routineId: routineId)
+                  )
+                );
               },
               child: const Icon(Icons.edit),
             ),
