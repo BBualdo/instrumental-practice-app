@@ -16,8 +16,23 @@ class RoutineDetailsScreen extends StatelessWidget {
       (routine) => routine.id == routineId,
     );
 
+    final isRoutineCompleted =
+        routine.exercises.isNotEmpty &&
+        routine.exercises.every((exercise) => exercise.isCompleted);
+
     return Scaffold(
-      appBar: AppBar(title: Text(routine.title)),
+      appBar: AppBar(
+        title: Text(routine.title),
+        actions: [
+          IconButton(
+            onPressed: () {
+              context.read<PracticeProvider>().resetRoutineProgress(routineId);
+            },
+            icon: Icon(Icons.restart_alt),
+            tooltip: 'Reset Progress',
+          ),
+        ],
+      ),
       body: routine.exercises.isEmpty
           ? const Center(child: Text('No exercises yet. Add your first!'))
           : ReorderableListView.builder(
@@ -68,21 +83,48 @@ class RoutineDetailsScreen extends StatelessWidget {
                 );
               },
             ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AddExerciseScreen(routineId: routineId),
+      floatingActionButton: isRoutineCompleted
+          ? FloatingActionButton.extended(
+              onPressed: () {
+                provider.resetRoutineProgress(routine.id);
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Routine finished! Good job!',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              },
+              backgroundColor: Colors.green,
+              icon: const Icon(Icons.done_all),
+              label: const Text('Finish Routine'),
+            )
+          : FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        AddExerciseScreen(routineId: routineId),
+                  ),
+                );
+              },
+              child: const Icon(Icons.add),
             ),
-          );
-        },
-        child: const Icon(Icons.add),
-      ),
     );
   }
 
-  Future<int?> _showStatisticPrompt(BuildContext context, String statisticName) async {
+  Future<int?> _showStatisticPrompt(
+    BuildContext context,
+    String statisticName,
+  ) async {
     final controller = TextEditingController();
 
     return showDialog<int>(
@@ -94,7 +136,7 @@ class RoutineDetailsScreen extends StatelessWidget {
             controller: controller,
             keyboardType: TextInputType.number,
             decoration: InputDecoration(hintText: 'Enter $statisticName'),
-            autofocus: true
+            autofocus: true,
           ),
           actions: [
             TextButton(

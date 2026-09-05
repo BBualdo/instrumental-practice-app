@@ -101,6 +101,16 @@ class PracticeProvider extends ChangeNotifier {
 
     notifyListeners();
   }
+
+  void resetRoutineProgress(String routineId) {
+    final routine = _routines.firstWhere((routine) => routine.id == routineId);
+
+    for (var exercise in routine.exercises) {
+      exercise.isCompleted = false;
+    }
+
+    notifyListeners();
+  }
  
   void _seedExampleData() {
     _exercises.addAll([
