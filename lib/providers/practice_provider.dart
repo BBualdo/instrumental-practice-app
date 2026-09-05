@@ -16,6 +16,9 @@ class PracticeProvider extends ChangeNotifier {
   List<Exercise> get activeExercises =>
       _exercises.where((exercise) => exercise.isActive).toList();
 
+  List<Exercise> get archivedExercises =>
+      _exercises.where((exercise) => !exercise.isActive).toList();
+
   List<Routine> get routines => _routines;
 
   Routine getRoutineById(String id) {
@@ -54,6 +57,54 @@ class PracticeProvider extends ChangeNotifier {
       _exercises[index].isActive = false;
       notifyListeners();
     }
+  }
+
+  void restoreExercise(String id) {
+    final index = _exercises.indexWhere((exercise) => exercise.id == id);
+    if (index != -1) {
+      _exercises[index].isActive = true;
+      notifyListeners();
+    }
+  }
+
+  void deleteExercisePermanently(String id) {
+    for (var routine in _routines) {
+      routine.exerciseIds.remove(id);
+    }
+
+    _exercises.removeWhere((exercise) => exercise.id == id);
+    notifyListeners();
+  }
+
+  void updateExercise({
+    required String id,
+    required String title,
+    required int duration,
+    required Instrument instrument,
+    String? description,
+    String? relatedLink,
+    String? statisticName,
+  }) {
+    final exercise = getExerciseById(id);
+
+    final updatedExercise = Exercise(
+      id: id,
+      title: title,
+      durationMinutes: duration,
+      instrument: instrument,
+      description: description,
+      relatedLink: relatedLink,
+      statisticName: statisticName,
+      isActive: exercise.isActive,
+      isCompleted: exercise.isCompleted,
+      highestStatistic: exercise.highestStatistic,
+      lastStatistic: exercise.lastStatistic
+    );
+
+    final index = _exercises.indexWhere((exercise) => exercise.id == id);
+    _exercises[index] = updatedExercise;
+
+    notifyListeners();
   }
 
   void addRoutine(

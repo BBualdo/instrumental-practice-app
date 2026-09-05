@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:instrumental/models/exercise.dart';
 import 'package:instrumental/models/instrument.dart';
 import 'package:instrumental/providers/practice_provider.dart';
 import 'package:provider/provider.dart';
 
 class AddExerciseScreen extends StatefulWidget {
-  const AddExerciseScreen({super.key});
+  final Exercise? exerciseToEdit;
+
+  const AddExerciseScreen({super.key, this.exerciseToEdit});
 
   @override
   State<StatefulWidget> createState() => _AddExerciseScreenState();
@@ -17,13 +20,15 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
   final _durationController = TextEditingController();
   final _relatedLinkController = TextEditingController();
   final _statisticNameController = TextEditingController();
-  Instrument _selectedInstrument = Instrument.guitar;
+  late Instrument _selectedInstrument;
 
   @override
   Widget build(BuildContext context) {
+    final isEditing = widget.exerciseToEdit != null;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('New Exercise'),
+        title: Text(isEditing ? 'Update Exercise' : 'New Exercise'),
         actions: [
           IconButton(onPressed: _saveExercise, icon: const Icon(Icons.save)),
         ],
@@ -140,6 +145,24 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+
+    final editTarget = widget.exerciseToEdit;
+
+    if (editTarget != null) {
+      _titleController.text = editTarget.title;
+      _descriptionController.text = editTarget.description ?? '';
+      _durationController.text = editTarget.durationMinutes.toString();
+      _relatedLinkController.text = editTarget.relatedLink ?? '';
+      _statisticNameController.text = editTarget.statisticName ?? '';
+      _selectedInstrument = editTarget.instrument;
+    } else {
+      _selectedInstrument = Instrument.guitar;
+    }
+  }
+
+  @override
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
@@ -154,14 +177,38 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
     if (_formKey.currentState!.validate()) {
       final provider = context.read<PracticeProvider>();
 
-      provider.addExercise(
-        title: _titleController.text,
-        duration: int.parse(_durationController.text),
-        description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
-        relatedLink: _relatedLinkController.text.isEmpty ? null : _relatedLinkController.text,
-        statisticName: _statisticNameController.text.isEmpty ? null : _statisticNameController.text,
-        instrument: _selectedInstrument,
-      );
+      if (widget.exerciseToEdit != null) {
+        provider.updateExercise(
+          id: widget.exerciseToEdit!.id,
+          title: _titleController.text,
+          duration: int.parse(_durationController.text),
+          description: _descriptionController.text.isEmpty
+              ? null
+              : _descriptionController.text,
+          relatedLink: _relatedLinkController.text.isEmpty
+              ? null
+              : _relatedLinkController.text,
+          statisticName: _statisticNameController.text.isEmpty
+              ? null
+              : _statisticNameController.text,
+          instrument: _selectedInstrument,
+        );
+      } else {
+        provider.addExercise(
+          title: _titleController.text,
+          duration: int.parse(_durationController.text),
+          description: _descriptionController.text.isEmpty
+              ? null
+              : _descriptionController.text,
+          relatedLink: _relatedLinkController.text.isEmpty
+              ? null
+              : _relatedLinkController.text,
+          statisticName: _statisticNameController.text.isEmpty
+              ? null
+              : _statisticNameController.text,
+          instrument: _selectedInstrument,
+        );
+      }
 
       Navigator.of(context).pop();
     }
