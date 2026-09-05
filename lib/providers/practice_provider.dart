@@ -75,6 +75,22 @@ class PracticeProvider extends ChangeNotifier {
 
     notifyListeners();
   }
+
+  void completeExercise(String routineId, String exerciseId, {int? statValue}) {
+    final routine = _routines.firstWhere((routine) => routine.id == routineId);
+    final exercise = routine.exercises.firstWhere((exercise) => exercise.id == exerciseId);
+
+    exercise.isCompleted = true;
+
+    if (statValue != null) {
+      exercise.lastStatistic = statValue;
+      if (exercise.highestStatistic == null || statValue > exercise.highestStatistic!) {
+        exercise.highestStatistic = statValue;
+      }
+    }
+
+    notifyListeners();
+  }
  
   void _seedExampleData() {
     _exercises.addAll([

@@ -6,6 +6,9 @@ class Exercise {
   final String? relatedLink;
   final String? statisticName;
   bool isActive;
+  bool isCompleted;
+  int? lastStatistic;
+  int? highestStatistic;
 
   Exercise({
     required this.id,
@@ -14,6 +17,11 @@ class Exercise {
     required this.durationMinutes,
     this.relatedLink,
     this.statisticName,
-    this.isActive = false,
+    this.isActive = true,
+    this.isCompleted = false,
+    this.lastStatistic,
+    this.highestStatistic
   });
+
+  int get durationSeconds => durationMinutes * 60;
 }
