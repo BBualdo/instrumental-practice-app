@@ -11,9 +11,7 @@ class RoutineDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<PracticeProvider>();
-    final routine = provider.routines.firstWhere(
-      (routine) => routine.id == routineId,
-    );
+    final routine = provider.getRoutineById(routineId);
     final exercises = provider.getExercisesForRoutine(routineId);
 
     final isRoutineCompleted =

@@ -18,6 +18,14 @@ class PracticeProvider extends ChangeNotifier {
 
   List<Routine> get routines => _routines;
 
+  Routine getRoutineById(String id) {
+    return _routines.firstWhere((routine) => routine.id == id);
+  }
+
+  Exercise getExerciseById(String id) {
+    return _exercises.firstWhere((exercise) => exercise.id == id);
+  }
+
   void addExercise({
     required String title,
     required int duration,
@@ -65,13 +73,10 @@ class PracticeProvider extends ChangeNotifier {
   }
 
   List<Exercise> getExercisesForRoutine(String routineId) {
-    final routine = _routines.firstWhere((routine) => routine.id == routineId);
+    final routine = getRoutineById(routineId);
 
     return routine.exerciseIds
-        .map(
-          (exerciseId) =>
-              _exercises.firstWhere((exercise) => exercise.id == exerciseId),
-        )
+        .map((exerciseId) => getExerciseById(exerciseId))
         .where((exercise) => exercise.isActive)
         .toList();
   }
@@ -85,9 +90,7 @@ class PracticeProvider extends ChangeNotifier {
   }
 
   void completeExercise(String exerciseId, {int? statValue}) {
-    final exercise = _exercises.firstWhere(
-      (exercise) => exercise.id == exerciseId,
-    );
+    final exercise = getExerciseById(exerciseId);
     exercise.isCompleted = true;
 
     if (statValue != null) {
@@ -104,7 +107,7 @@ class PracticeProvider extends ChangeNotifier {
   void reorderExercises(String routineId, int oldIndex, int newIndex) {
     if (oldIndex == newIndex) return;
 
-    final routine = _routines.firstWhere((routine) => routine.id == routineId);
+    final routine = getRoutineById(routineId);
     final exercise = routine.exerciseIds.removeAt(oldIndex);
     routine.exerciseIds.insert(newIndex, exercise);
 
@@ -112,12 +115,10 @@ class PracticeProvider extends ChangeNotifier {
   }
 
   void resetRoutineProgress(String routineId) {
-    final routine = _routines.firstWhere((routine) => routine.id == routineId);
+    final routine = getRoutineById(routineId);
 
     for (var exerciseId in routine.exerciseIds) {
-      final exercise = _exercises.firstWhere(
-        (exercise) => exercise.id == exerciseId,
-      );
+      final exercise = getExerciseById(exerciseId);
       exercise.isCompleted = false;
     }
 
@@ -125,7 +126,7 @@ class PracticeProvider extends ChangeNotifier {
   }
 
   void toggleExerciseInRoutine(String routineId, String exerciseId) {
-    final routine = _routines.firstWhere((routine) => routine.id == routineId);
+    final routine = getRoutineById(routineId);
 
     if (routine.exerciseIds.contains(exerciseId)) {
       routine.exerciseIds.remove(exerciseId);
