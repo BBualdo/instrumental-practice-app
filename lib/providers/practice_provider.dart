@@ -91,6 +91,16 @@ class PracticeProvider extends ChangeNotifier {
 
     notifyListeners();
   }
+
+  void reorderExercises(String routineId, int oldIndex, int newIndex) {
+    if (oldIndex == newIndex) return;
+
+    final routine = _routines.firstWhere((routine) => routine.id == routineId);
+    final exercise = routine.exercises.removeAt(oldIndex);
+    routine.exercises.insert(newIndex, exercise);
+
+    notifyListeners();
+  }
  
   void _seedExampleData() {
     _exercises.addAll([

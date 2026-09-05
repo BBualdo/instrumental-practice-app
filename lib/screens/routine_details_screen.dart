@@ -20,16 +20,20 @@ class RoutineDetailsScreen extends StatelessWidget {
       appBar: AppBar(title: Text(routine.title)),
       body: routine.exercises.isEmpty
           ? const Center(child: Text('No exercises yet. Add your first!'))
-          : ListView.builder(
+          : ReorderableListView.builder(
               itemCount: routine.exercises.length,
+              onReorderItem: (oldIndex, newIndex) {
+                provider.reorderExercises(routineId, oldIndex, newIndex);
+              },
               itemBuilder: (context, index) {
                 final exercise = routine.exercises[index];
 
                 return ListTile(
+                  key: ValueKey(exercise.id),
                   tileColor: exercise.isCompleted
                       ? Colors.green.withValues(alpha: 0.2)
                       : null,
-                  leading: const Icon(Icons.timer),
+                  leading: const Icon(Icons.drag_handle),
                   title: Text(exercise.title),
                   subtitle: Text('Duration: ${exercise.durationMinutes} min'),
                   onTap: () {
