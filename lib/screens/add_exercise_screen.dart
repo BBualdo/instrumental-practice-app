@@ -4,9 +4,7 @@ import 'package:instrumental/providers/practice_provider.dart';
 import 'package:provider/provider.dart';
 
 class AddExerciseScreen extends StatefulWidget {
-  final String routineId;
-
-  const AddExerciseScreen({super.key, required this.routineId});
+  const AddExerciseScreen({super.key});
 
   @override
   State<StatefulWidget> createState() => _AddExerciseScreenState();
@@ -159,9 +157,9 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
       provider.addExercise(
         title: _titleController.text,
         duration: int.parse(_durationController.text),
-        description: _descriptionController.text,
-        relatedLink: _relatedLinkController.text,
-        statisticName: _statisticNameController.text,
+        description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
+        relatedLink: _relatedLinkController.text.isEmpty ? null : _relatedLinkController.text,
+        statisticName: _statisticNameController.text.isEmpty ? null : _statisticNameController.text,
         instrument: _selectedInstrument,
       );
 
