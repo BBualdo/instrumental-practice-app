@@ -26,7 +26,7 @@ class PracticeSession {
   factory PracticeSession.fromJson(Map<String, dynamic> json) {
     return PracticeSession(
       id: json['id'],
-      date: json['date'],
+      date: DateTime.parse(json['date']),
       durationMinutes: json['durationMinutes'],
       instrument: Instrument.values.firstWhere(
         (value) => value.name == json['instrument'],

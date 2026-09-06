@@ -1,4 +1,5 @@
 import 'package:instrumental/models/instrument.dart';
+import 'package:instrumental/models/stat_record.dart';
 
 class Exercise {
   final String id;
@@ -12,6 +13,7 @@ class Exercise {
   bool isCompleted;
   int? lastStatistic;
   int? highestStatistic;
+  final List<StatRecord> statHistory;
 
   Exercise({
     required this.id,
@@ -24,8 +26,9 @@ class Exercise {
     this.isActive = true,
     this.isCompleted = false,
     this.lastStatistic,
-    this.highestStatistic
-  });
+    this.highestStatistic,
+    List<StatRecord>? statHistory,
+  }) : statHistory = statHistory ?? [];
 
   int get durationSeconds => durationMinutes * 60;
 
@@ -41,6 +44,7 @@ class Exercise {
     'isCompleted': isCompleted,
     'lastStatistic': lastStatistic,
     'highestStatistic': highestStatistic,
+    'statHistory': statHistory.map((stat) => stat.toJson()).toList(),
   };
 
   factory Exercise.fromJson(Map<String, dynamic> json) {
@@ -51,11 +55,18 @@ class Exercise {
       durationMinutes: json['durationMinutes'],
       relatedLink: json['relatedLink'],
       statisticName: json['statisticName'],
-      instrument: Instrument.values.firstWhere((e) => e.name == json['instrument']),
+      instrument: Instrument.values.firstWhere(
+        (e) => e.name == json['instrument'],
+      ),
       isActive: json['isActive'] ?? true,
       isCompleted: json['isCompleted'] ?? false,
       lastStatistic: json['lastStatistic'],
       highestStatistic: json['highestStatistic'],
+      statHistory:
+          (json['statHistory'] as List?)
+              ?.map((el) => StatRecord.fromJson(el))
+              .toList() ??
+          [],
     );
   }
 }

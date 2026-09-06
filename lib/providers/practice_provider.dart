@@ -3,7 +3,9 @@ import 'package:instrumental/models/exercise.dart';
 import 'package:instrumental/models/instrument.dart';
 import 'package:instrumental/models/practice_session.dart';
 import 'package:instrumental/models/routine.dart';
+import 'package:instrumental/models/stat_record.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'dart:convert';
 import 'dart:async';
 
@@ -114,6 +116,7 @@ class PracticeProvider extends ChangeNotifier {
       isCompleted: exercise.isCompleted,
       highestStatistic: exercise.highestStatistic,
       lastStatistic: exercise.lastStatistic,
+      statHistory: exercise.statHistory
     );
 
     final index = _exercises.indexWhere((exercise) => exercise.id == id);
@@ -168,6 +171,10 @@ class PracticeProvider extends ChangeNotifier {
           statValue > exercise.highestStatistic!) {
         exercise.highestStatistic = statValue;
       }
+
+      exercise.statHistory.add(
+        StatRecord(date: DateTime.now(), value: statValue),
+      );
     }
 
     notifyListeners();
@@ -272,8 +279,6 @@ class PracticeProvider extends ChangeNotifier {
   ) {
     final List decoded = jsonDecode(jsonString);
     collection.clear();
-    collection.addAll(
-      decoded.map((json) => fromJsonFactory(json)).toList(),
-    );
+    collection.addAll(decoded.map((json) => fromJsonFactory(json)).toList());
   }
 }
