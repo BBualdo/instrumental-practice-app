@@ -125,7 +125,20 @@ class _ResultsChartTabState extends State<_ResultsChartTab> {
       );
     }).toList();
 
+    final maxStat = dailyHighest.values.isEmpty
+        ? 0
+        : dailyHighest.values.reduce((curr, next) => curr > next ? curr : next);
+
+    final double maxX = sortedDays.isEmpty
+        ? 0
+        : (sortedDays.length - 1).toDouble();
+    final double minX = sortedDays.length < 7 ? maxX - 6 : 0;
+
     return LineChartData(
+      minY: 0,
+      maxY: maxStat * 1.2 + 5,
+      minX: minX,
+      maxX: maxX,
       gridData: const FlGridData(show: true, drawVerticalLine: false),
       titlesData: FlTitlesData(
         topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -141,6 +154,7 @@ class _ResultsChartTabState extends State<_ResultsChartTab> {
             interval: 1,
             getTitlesWidget: (value, meta) {
               final index = value.toInt();
+
               if (index < 0 || index >= sortedDays.length) {
                 return const SizedBox.shrink();
               }
@@ -190,7 +204,6 @@ class _TimeSpentChartTab extends StatefulWidget {
 }
 
 class _TimeSpentChartTabState extends State<_TimeSpentChartTab> {
-  // null oznacza "Wszystko"
   int? _selectedDays = 7;
 
   @override
@@ -273,7 +286,6 @@ class _TimeSpentChartTabState extends State<_TimeSpentChartTab> {
 
             const SizedBox(height: 24),
 
-            // Przełącznik zakresu czasu
             SegmentedButton<int?>(
               segments: const [
                 ButtonSegment(value: 7, label: Text('7 Days')),
