@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:instrumental/screens/exercise_list_screen.dart';
 import 'package:instrumental/screens/routine_list_screen.dart';
+import 'package:instrumental/screens/stats_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -15,7 +16,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
     const RoutineListScreen(),
     const ExerciseListScreen(),
-    const Center(child: Text('StatisticsScreen - TBD')),
+    const StatsScreen(),
   ];
 
   @override
