@@ -182,15 +182,43 @@ class _ResultsChartTabState extends State<_ResultsChartTab> {
   }
 }
 
-class _TimeSpentChartTab extends StatelessWidget {
+class _TimeSpentChartTab extends StatefulWidget {
   const _TimeSpentChartTab();
+
+  @override
+  State<_TimeSpentChartTab> createState() => _TimeSpentChartTabState();
+}
+
+class _TimeSpentChartTabState extends State<_TimeSpentChartTab> {
+  // null oznacza "Wszystko"
+  int? _selectedDays = 7;
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<PracticeProvider>();
-    final sessions = provider.sessions;
+    final allSessions = provider.sessions;
 
-    final totalMinutes = sessions.fold(
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    DateTime? startDate;
+    if (_selectedDays != null) {
+      startDate = today.subtract(Duration(days: _selectedDays! - 1));
+    } else if (allSessions.isNotEmpty) {
+      final sortedSessions = List.of(allSessions)
+        ..sort((a, b) => a.date.compareTo(b.date));
+      final oldest = sortedSessions.first.date;
+      startDate = DateTime(oldest.year, oldest.month, oldest.day);
+    } else {
+      startDate = today;
+    }
+
+    final filteredSessions = allSessions.where((s) {
+      final sessionDate = DateTime(s.date.year, s.date.month, s.date.day);
+      return sessionDate.isAfter(startDate!.subtract(const Duration(days: 1)));
+    }).toList();
+
+    final totalMinutes = filteredSessions.fold(
       0,
       (sum, session) => sum + session.durationMinutes,
     );
@@ -223,7 +251,7 @@ class _TimeSpentChartTab extends StatelessWidget {
               child: Column(
                 children: [
                   const Text(
-                    'Total Practice Time',
+                    'Practice Time',
                     style: TextStyle(
                       color: Colors.white70,
                       fontSize: 16,
@@ -242,25 +270,48 @@ class _TimeSpentChartTab extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 40),
 
-            const Text(
-              'Last 7 Days',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
             const SizedBox(height: 24),
 
-            Expanded(child: BarChart(_createChartData(sessions))),
+            // Przełącznik zakresu czasu
+            SegmentedButton<int?>(
+              segments: const [
+                ButtonSegment(value: 7, label: Text('7 Days')),
+                ButtonSegment(value: 30, label: Text('30 Days')),
+                ButtonSegment(value: null, label: Text('All Time')),
+              ],
+              selected: {_selectedDays},
+              onSelectionChanged: (Set<int?> newSelection) {
+                setState(() {
+                  _selectedDays = newSelection.first;
+                });
+              },
+            ),
+
+            const SizedBox(height: 24),
+
+            Expanded(
+              child: BarChart(
+                _createChartData(filteredSessions, startDate, today),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  BarChartData _createChartData(List<PracticeSession> sessions) {
-    final List<double> weeklyData = List.filled(7, 0.0);
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
+  BarChartData _createChartData(
+    List<PracticeSession> sessions,
+    DateTime startDate,
+    DateTime endDate,
+  ) {
+    final Map<DateTime, int> dailyMinutes = {};
+    final int daysCount = endDate.difference(startDate).inDays + 1;
+
+    for (int i = 0; i < daysCount; i++) {
+      dailyMinutes[startDate.add(Duration(days: i))] = 0;
+    }
 
     for (var session in sessions) {
       final sessionDate = DateTime(
@@ -268,36 +319,56 @@ class _TimeSpentChartTab extends StatelessWidget {
         session.date.month,
         session.date.day,
       );
-      final difference = today.difference(sessionDate).inDays;
-
-      if (difference >= 0 && difference < 7) {
-        weeklyData[6 - difference] += session.durationMinutes.toDouble();
+      if (dailyMinutes.containsKey(sessionDate)) {
+        dailyMinutes[sessionDate] =
+            dailyMinutes[sessionDate]! + session.durationMinutes;
       }
     }
 
+    final sortedDays = dailyMinutes.keys.toList()..sort();
+    final maxValue = dailyMinutes.values.isEmpty
+        ? 0
+        : dailyMinutes.values.reduce((curr, next) => curr > next ? curr : next);
+
+    final double dynamicBarWidth = (200 / daysCount).clamp(4.0, 20.0);
+
     return BarChartData(
       alignment: BarChartAlignment.spaceAround,
-      maxY:
-          weeklyData.reduce((curr, next) => curr > next ? curr : next) * 1.2 +
-          10,
+      maxY: maxValue * 1.2 + 10,
       barTouchData: BarTouchData(enabled: true),
       titlesData: FlTitlesData(
         show: true,
         bottomTitles: AxisTitles(
           sideTitles: SideTitles(
             showTitles: true,
+            reservedSize: 32,
             getTitlesWidget: (value, meta) {
-              final date = today.subtract(Duration(days: 6 - value.toInt()));
-              final dayName = DateFormat('E').format(date);
+              final index = value.toInt();
+              if (index < 0 || index >= sortedDays.length) {
+                return const SizedBox.shrink();
+              }
+
+              final int step = daysCount > 7 ? (daysCount / 5).ceil() : 1;
+
+              final distanceFromEnd = (sortedDays.length - 1) - index;
+
+              if (distanceFromEnd % step != 0) {
+                return const SizedBox.shrink();
+              }
+
+              final date = sortedDays[index];
+              final formattedDate = DateFormat('MMM d').format(date);
+
               return Padding(
                 padding: const EdgeInsets.only(top: 8.0),
                 child: Text(
-                  dayName,
+                  formattedDate,
                   style: const TextStyle(
                     color: Colors.grey,
-                    fontSize: 12,
+                    fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),
+                  softWrap: false,
                 ),
               );
             },
@@ -311,27 +382,22 @@ class _TimeSpentChartTab extends StatelessWidget {
       ),
       gridData: const FlGridData(show: false),
       borderData: FlBorderData(show: false),
-      barGroups: weeklyData.asMap().entries.map((entry) {
+      barGroups: sortedDays.asMap().entries.map((entry) {
         return BarChartGroupData(
           x: entry.key,
           barRods: [
             BarChartRodData(
-              toY: entry.value,
+              toY: dailyMinutes[entry.value]!.toDouble(),
               gradient: const LinearGradient(
                 colors: [Color(0xFF00e676), Color(0xFF1de9b6)],
                 begin: Alignment.bottomCenter,
                 end: Alignment.topCenter,
               ),
-              width: 20,
+              width: dynamicBarWidth,
               borderRadius: BorderRadius.circular(6),
               backDrawRodData: BackgroundBarChartRodData(
                 show: true,
-                toY:
-                    weeklyData.reduce(
-                          (curr, next) => curr > next ? curr : next,
-                        ) *
-                        1.2 +
-                    10,
+                toY: maxValue * 1.2 + 10,
                 color: Colors.grey.withValues(alpha: 0.1),
               ),
             ),
