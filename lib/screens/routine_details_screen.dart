@@ -25,7 +25,7 @@ class RoutineDetailsScreen extends StatelessWidget {
         actions: [
           IconButton(
             onPressed: () {
-              context.read<PracticeProvider>().resetRoutineProgress(routineId);
+              context.read<PracticeProvider>().finishRoutine(routineId);
             },
             icon: Icon(Icons.restart_alt),
             tooltip: 'Reset Progress',
@@ -37,7 +37,11 @@ class RoutineDetailsScreen extends StatelessWidget {
           : ReorderableListView.builder(
               itemCount: exercises.length,
               onReorderItem: (oldIndex, newIndex) {
-                context.read<PracticeProvider>().reorderExercises(routineId, oldIndex, newIndex);
+                context.read<PracticeProvider>().reorderExercises(
+                  routineId,
+                  oldIndex,
+                  newIndex,
+                );
               },
               itemBuilder: (context, index) {
                 final exercise = exercises[index];
@@ -84,7 +88,7 @@ class RoutineDetailsScreen extends StatelessWidget {
       floatingActionButton: isRoutineCompleted
           ? FloatingActionButton.extended(
               onPressed: () {
-                context.read<PracticeProvider>().resetRoutineProgress(routine.id);
+                context.read<PracticeProvider>().finishRoutine(routine.id);
 
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -109,8 +113,9 @@ class RoutineDetailsScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => RoutineExerciseSelectionScreen(routineId: routineId)
-                  )
+                    builder: (context) =>
+                        RoutineExerciseSelectionScreen(routineId: routineId),
+                  ),
                 );
               },
               child: const Icon(Icons.edit),

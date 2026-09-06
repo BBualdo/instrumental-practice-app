@@ -1,15 +1,16 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:instrumental/models/exercise.dart';
 import 'package:instrumental/models/instrument.dart';
+import 'package:instrumental/models/practice_session.dart';
 import 'package:instrumental/models/routine.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'dart:async';
 
 class PracticeProvider extends ChangeNotifier {
   final List<Exercise> _exercises = [];
   final List<Routine> _routines = [];
+  final List<PracticeSession> _sessions = [];
 
   PracticeProvider() {
     loadFromStorage();
@@ -24,6 +25,8 @@ class PracticeProvider extends ChangeNotifier {
       _exercises.where((exercise) => !exercise.isActive).toList();
 
   List<Routine> get routines => _routines;
+
+  List<PracticeSession> get sessions => _sessions;
 
   Routine getRoutineById(String id) {
     return _routines.firstWhere((routine) => routine.id == id);
@@ -110,7 +113,7 @@ class PracticeProvider extends ChangeNotifier {
       isActive: exercise.isActive,
       isCompleted: exercise.isCompleted,
       highestStatistic: exercise.highestStatistic,
-      lastStatistic: exercise.lastStatistic
+      lastStatistic: exercise.lastStatistic,
     );
 
     final index = _exercises.indexWhere((exercise) => exercise.id == id);
@@ -182,11 +185,27 @@ class PracticeProvider extends ChangeNotifier {
     unawaited(saveToStorage());
   }
 
-  void resetRoutineProgress(String routineId) {
+  void finishRoutine(String routineId) {
     final routine = getRoutineById(routineId);
+    final exercises = getExercisesForRoutine(routineId);
 
-    for (var exerciseId in routine.exerciseIds) {
-      final exercise = getExerciseById(exerciseId);
+    final totalMinutes = exercises
+        .where((exercise) => exercise.isCompleted)
+        .fold(0, (sum, exercise) => sum + exercise.durationMinutes);
+
+    if (totalMinutes > 0) {
+      final session = PracticeSession(
+        id: DateTime.now().toString(),
+        date: DateTime.now(),
+        durationMinutes: totalMinutes,
+        instrument: routine.instrument,
+        routineId: routine.id,
+      );
+
+      _sessions.add(session);
+    }
+
+    for (var exercise in exercises) {
       exercise.isCompleted = false;
     }
 
@@ -210,30 +229,51 @@ class PracticeProvider extends ChangeNotifier {
   Future<void> saveToStorage() async {
     final prefs = await SharedPreferences.getInstance();
 
-    final exercisesJson = jsonEncode(_exercises.map((exercise) => exercise.toJson()).toList());
-    final routinesJson = jsonEncode(_routines.map((routine) => routine.toJson()).toList());
+    final exercisesJson = jsonEncode(
+      _exercises.map((exercise) => exercise.toJson()).toList(),
+    );
+    final routinesJson = jsonEncode(
+      _routines.map((routine) => routine.toJson()).toList(),
+    );
+    final sessionsJson = jsonEncode(
+      _sessions.map((session) => session.toJson()).toList(),
+    );
 
     await prefs.setString('exercises_data', exercisesJson);
     await prefs.setString('routines_data', routinesJson);
+    await prefs.setString('sessions_data', sessionsJson);
   }
 
   Future<void> loadFromStorage() async {
     final prefs = await SharedPreferences.getInstance();
     final exercisesString = prefs.getString('exercises_data');
     final routinesString = prefs.getString('routines_data');
+    final sessionsString = prefs.getString('sessions_data');
 
     if (exercisesString != null) {
-      final List decoded = jsonDecode(exercisesString);
-      _exercises.clear();
-      _exercises.addAll(decoded.map((json) => Exercise.fromJson(json)).toList());
+      _decodeAndUpdate(exercisesString, _exercises, Exercise.fromJson);
     }
 
     if (routinesString != null) {
-      final List decoded = jsonDecode(routinesString);
-      _routines.clear();
-      _routines.addAll(decoded.map((json) => Routine.fromJson(json)).toList());
+      _decodeAndUpdate(routinesString, _routines, Routine.fromJson);
+    }
+
+    if (sessionsString != null) {
+      _decodeAndUpdate(sessionsString, _sessions, PracticeSession.fromJson);
     }
 
     notifyListeners();
+  }
+
+  void _decodeAndUpdate<T>(
+    String jsonString,
+    List<T> collection,
+    T Function(Map<String, dynamic>) fromJsonFactory,
+  ) {
+    final List decoded = jsonDecode(jsonString);
+    collection.clear();
+    collection.addAll(
+      decoded.map((json) => fromJsonFactory(json)).toList(),
+    );
   }
 }
