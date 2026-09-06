@@ -104,11 +104,25 @@ class _ResultsChartTabState extends State<_ResultsChartTab> {
   }
 
   LineChartData _buildChartData(Exercise exercise) {
-    final history = List.of(exercise.statHistory)
-      ..sort((a, b) => a.date.compareTo(b.date));
+    final Map<DateTime, int> dailyHighest = {};
+    for (var record in exercise.statHistory) {
+      final day = DateTime(
+        record.date.year,
+        record.date.month,
+        record.date.day,
+      );
+      if (!dailyHighest.containsKey(day) || record.value > dailyHighest[day]!) {
+        dailyHighest[day] = record.value;
+      }
+    }
 
-    final spots = history.asMap().entries.map((entry) {
-      return FlSpot(entry.key.toDouble(), entry.value.value.toDouble());
+    final sortedDays = dailyHighest.keys.toList()..sort();
+
+    final spots = sortedDays.asMap().entries.map((entry) {
+      return FlSpot(
+        entry.key.toDouble(),
+        dailyHighest[entry.value]!.toDouble(),
+      );
     }).toList();
 
     return LineChartData(
@@ -118,10 +132,34 @@ class _ResultsChartTabState extends State<_ResultsChartTab> {
         rightTitles: const AxisTitles(
           sideTitles: SideTitles(showTitles: false),
         ),
+        leftTitles: const AxisTitles(
+          sideTitles: SideTitles(showTitles: true, reservedSize: 40),
+        ),
         bottomTitles: AxisTitles(
           sideTitles: SideTitles(
             showTitles: true,
-            getTitlesWidget: (value, meta) => Text('#${value.toInt() + 1}'),
+            interval: 1,
+            getTitlesWidget: (value, meta) {
+              final index = value.toInt();
+              if (index < 0 || index >= sortedDays.length) {
+                return const SizedBox.shrink();
+              }
+
+              final date = sortedDays[index];
+              final formattedDate = DateFormat('MMM d').format(date);
+
+              return Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text(
+                  formattedDate,
+                  style: const TextStyle(
+                    color: Colors.grey,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ),
