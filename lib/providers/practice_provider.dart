@@ -28,6 +28,12 @@ class PracticeProvider extends ChangeNotifier {
 
   List<Routine> get routines => _routines;
 
+  List<Routine> get activeRoutines =>
+      _routines.where((routine) => routine.isActive).toList();
+
+  List<Routine> get archivedRoutines =>
+      _routines.where((routine) => !routine.isActive).toList();
+
   List<PracticeSession> get sessions => _sessions;
 
   Routine getRoutineById(String id) {
@@ -116,7 +122,7 @@ class PracticeProvider extends ChangeNotifier {
       isCompleted: exercise.isCompleted,
       highestStatistic: exercise.highestStatistic,
       lastStatistic: exercise.lastStatistic,
-      statHistory: exercise.statHistory
+      statHistory: exercise.statHistory,
     );
 
     final index = _exercises.indexWhere((exercise) => exercise.id == id);
@@ -136,9 +142,34 @@ class PracticeProvider extends ChangeNotifier {
       title: title,
       instrument: instrument,
       exerciseIds: exerciseIds,
+      isActive: true,
     );
 
     _routines.add(newRoutine);
+
+    notifyListeners();
+    unawaited(saveToStorage());
+  }
+
+  void archiveRoutine(String routineId) {
+    final index = _routines.indexWhere((routine) => routine.id == routineId);
+    _routines[index].isActive = false;
+
+    notifyListeners();
+    unawaited(saveToStorage());
+  }
+
+  void restoreRoutine(String routineId) {
+    final index = _routines.indexWhere((routine) => routine.id == routineId);
+    _routines[index].isActive = true;
+
+    notifyListeners();
+    unawaited(saveToStorage());
+  }
+
+  void deleteRoutinePermanently(String routineId) {
+    final index = _routines.indexWhere((routine) => routine.id == routineId);
+    _routines.removeAt(index);
 
     notifyListeners();
     unawaited(saveToStorage());
@@ -151,6 +182,12 @@ class PracticeProvider extends ChangeNotifier {
         .map((exerciseId) => getExerciseById(exerciseId))
         .where((exercise) => exercise.isActive)
         .toList();
+  }
+
+  int getTotalDurationForRoutine(String routineId) {
+    final exercises = getExercisesForRoutine(routineId);
+
+    return exercises.fold(0, (sum, exercise) => sum + exercise.durationMinutes);
   }
 
   List<Exercise> getAvailableExercisesForInstrument(Instrument instrument) {

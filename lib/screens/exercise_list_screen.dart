@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:instrumental/screens/add_exercise_screen.dart';
+import 'package:instrumental/utils/capitalize_string.dart';
 import 'package:provider/provider.dart';
 import 'package:instrumental/providers/practice_provider.dart';
 
@@ -76,7 +77,7 @@ class _ActiveExercisesTab extends StatelessWidget {
             ),
             title: Text(exercise.title),
             subtitle: Text(
-              '${exercise.durationMinutes} min | Instrument: ${exercise.instrument.name}',
+              '${exercise.durationMinutes} min | Instrument: ${capitalizeString(exercise.instrument.name)}',
             ),
             onTap: () => Navigator.push(
               context,

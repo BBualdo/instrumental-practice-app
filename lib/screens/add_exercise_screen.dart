@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:instrumental/models/exercise.dart';
 import 'package:instrumental/models/instrument.dart';
 import 'package:instrumental/providers/practice_provider.dart';
+import 'package:instrumental/utils/capitalize_string.dart';
 import 'package:provider/provider.dart';
 
 class AddExerciseScreen extends StatefulWidget {
@@ -79,7 +80,7 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                 items: Instrument.values.map((Instrument instrument) {
                   return DropdownMenuItem<Instrument>(
                     value: instrument,
-                    child: Text(instrument.name.toUpperCase()),
+                    child: Text(capitalizeString(instrument.name)),
                   );
                 }).toList(),
                 onChanged: (Instrument? newValue) {
