@@ -106,7 +106,10 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                     return 'Enter exercise duration';
                   }
                   if (int.tryParse(value) == null) {
-                    return 'Duration must be a number';
+                    return 'Duration must be an integer';
+                  }
+                  if (int.parse(value) <= 0) {
+                    return 'Duration must be greater than 0';
                   }
                   return null;
                 },
