@@ -199,7 +199,7 @@ class PracticeProvider extends ChangeNotifier {
         .toList();
   }
 
-  void completeExercise(String exerciseId, {int? statValue}) {
+  void completeExercise(String exerciseId, {int? statValue, String? routineId}) {
     final exercise = getExerciseById(exerciseId);
     exercise.isCompleted = true;
 
@@ -213,6 +213,17 @@ class PracticeProvider extends ChangeNotifier {
       exercise.statHistory.add(
         StatRecord(date: DateTime.now(), value: statValue),
       );
+    }
+
+    if (exercise.durationMinutes > 0) {
+      final session = PracticeSession(
+        id: DateTime.now().toString(),
+        date: DateTime.now(),
+        durationMinutes: exercise.durationMinutes,
+        instrument: exercise.instrument,
+        routineId: routineId,
+      );
+      _sessions.add(session);
     }
 
     notifyListeners();
@@ -232,34 +243,6 @@ class PracticeProvider extends ChangeNotifier {
 
   void resetRoutine(String routineId) {
     final exercises = getExercisesForRoutine(routineId);
-
-    for (var exercise in exercises) {
-      exercise.isCompleted = false;
-    }
-
-    notifyListeners();
-    unawaited(saveToStorage());
-  }
-
-  void finishRoutine(String routineId) {
-    final routine = getRoutineById(routineId);
-    final exercises = getExercisesForRoutine(routineId);
-
-    final totalMinutes = exercises
-        .where((exercise) => exercise.isCompleted)
-        .fold(0, (sum, exercise) => sum + exercise.durationMinutes);
-
-    if (totalMinutes > 0) {
-      final session = PracticeSession(
-        id: DateTime.now().toString(),
-        date: DateTime.now(),
-        durationMinutes: totalMinutes,
-        instrument: routine.instrument,
-        routineId: routine.id,
-      );
-
-      _sessions.add(session);
-    }
 
     for (var exercise in exercises) {
       exercise.isCompleted = false;

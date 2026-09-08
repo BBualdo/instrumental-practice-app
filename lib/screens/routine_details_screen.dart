@@ -76,6 +76,7 @@ class RoutineDetailsScreen extends StatelessWidget {
                             context.read<PracticeProvider>().completeExercise(
                               exercise.id,
                               statValue: statValue,
+                              routineId: routine.id,
                             );
                           }
                         },
@@ -88,7 +89,7 @@ class RoutineDetailsScreen extends StatelessWidget {
       floatingActionButton: isRoutineCompleted
           ? FloatingActionButton.extended(
               onPressed: () {
-                context.read<PracticeProvider>().finishRoutine(routine.id);
+                context.read<PracticeProvider>().resetRoutine(routine.id);
 
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
