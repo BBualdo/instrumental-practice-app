@@ -70,14 +70,53 @@ class _ActiveExercisesTab extends StatelessWidget {
             );
           },
           child: ListTile(
-            leading: Icon(
-              exercise.instrument.name == 'piano'
-                  ? Icons.piano
-                  : Icons.music_note,
+            // Zmiana ikony na Emoji dla gitary
+            leading: exercise.instrument.name == 'piano'
+                ? const Icon(Icons.piano, size: 32)
+                : const Text('🎸', style: TextStyle(fontSize: 26)),
+
+            title: Text(
+              exercise.title,
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-            title: Text(exercise.title),
-            subtitle: Text(
-              '${exercise.durationMinutes} min | Instrument: ${capitalizeString(exercise.instrument.name)}',
+
+            // Nowoczesny Subtitle z tagami
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Wrap(
+                spacing: 16.0, // Odstęp w poziomie
+                runSpacing: 6.0, // Odstęp w pionie przy zawijaniu
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.schedule, size: 14, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${exercise.durationMinutes} min',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.category, size: 14, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Text(
+                        capitalizeString(exercise.instrument.name),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
             onTap: () => Navigator.push(
               context,
@@ -163,9 +202,9 @@ class _ArchivedExercisesTab extends StatelessWidget {
               context.read<PracticeProvider>().deleteExercisePermanently(
                 exerciseId,
               );
-              
+
               ScaffoldMessenger.of(dialogContext).showSnackBar(
-                SnackBar(content: Text('$exerciseTitle has been deleted.'))
+                SnackBar(content: Text('$exerciseTitle has been deleted.')),
               );
               Navigator.pop(dialogContext);
             },

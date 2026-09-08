@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:instrumental/screens/add_exercise_screen.dart';
 import 'package:instrumental/screens/add_routine_screen.dart';
-import 'package:instrumental/screens/exercise_list_screen.dart';
 import 'package:instrumental/screens/routine_details_screen.dart';
 import 'package:instrumental/utils/capitalize_string.dart';
 import 'package:provider/provider.dart';
@@ -73,18 +71,72 @@ class _ActiveRoutinesTab extends StatelessWidget {
             );
           },
           child: ListTile(
-            leading: Icon(
-              routine.instrument.name == 'piano'
-                  ? Icons.piano
-                  : Icons.music_note,
+            leading: routine.instrument.name == 'piano'
+                ? const Text('🎹', style: TextStyle(fontSize: 26))
+                : const Text('🎸', style: TextStyle(fontSize: 26)),
+
+            title: Text(
+              routine.title,
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-            title: Text(routine.title),
-            subtitle: Text(
-              'Duration: ${provider.getTotalDurationForRoutine(routine.id)} min\nExercises: ${routine.exerciseIds.length}\nInstrument: ${capitalizeString(routine.instrument.name)}',
+
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Wrap(
+                spacing: 16.0,
+                runSpacing: 6.0,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.schedule, size: 14, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${provider.getTotalDurationForRoutine(routine.id)} min',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.list, size: 14, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${routine.exerciseIds.length} exercises',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.category, size: 14, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Text(
+                        capitalizeString(routine.instrument.name),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => RoutineDetailsScreen(routineId: routine.id)),
+              MaterialPageRoute(
+                builder: (context) =>
+                    RoutineDetailsScreen(routineId: routine.id),
+              ),
             ),
           ),
         );

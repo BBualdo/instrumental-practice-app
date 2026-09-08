@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:instrumental/models/exercise.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -45,11 +46,40 @@ class _ExerciseExecutionSheetState extends State<ExerciseExecutionSheet> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                Text(
-                  'Last ${widget.exercise.statisticName}: ${widget.exercise.lastStatistic ?? 'N/A'}',
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Last ${widget.exercise.statisticName}',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${widget.exercise.lastStatistic ?? 'N/A'}',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
-                Text(
-                  'Most ${widget.exercise.statisticName}: ${widget.exercise.highestStatistic ?? 'N/A'}',
+
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Most ${widget.exercise.statisticName}',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${widget.exercise.highestStatistic ?? 'N/A'}',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -79,7 +109,8 @@ class _ExerciseExecutionSheetState extends State<ExerciseExecutionSheet> {
               const SizedBox(width: 16),
               IconButton(
                 onPressed: widget.onComplete,
-                icon: const Icon(Icons.check_circle), color: Colors.green,
+                icon: const Icon(Icons.check_circle),
+                color: Colors.green,
                 iconSize: 32,
               ),
             ],
