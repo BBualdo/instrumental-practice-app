@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:instrumental/models/exercise.dart';
 import 'package:instrumental/models/instrument.dart';
 import 'package:instrumental/models/practice_session.dart';
@@ -334,12 +335,49 @@ class PracticeProvider extends ChangeNotifier {
   }
 
   void _decodeAndUpdate<T>(
-    String jsonString,
-    List<T> collection,
-    T Function(Map<String, dynamic>) fromJsonFactory,
-  ) {
+      String jsonString,
+      List<T> collection,
+      T Function(Map<String, dynamic>) fromJsonFactory,
+      ) {
+    if (jsonString.isEmpty) return;
+
     final List decoded = jsonDecode(jsonString);
     collection.clear();
     collection.addAll(decoded.map((json) => fromJsonFactory(json)).toList());
+  }
+
+  Future<bool> importDataFromJson(String jsonString) async {
+    try {
+      final Map<String, dynamic> data = jsonDecode(jsonString);
+
+      _decodeAndUpdateList(data['exercises'], _exercises, Exercise.fromJson);
+      _decodeAndUpdateList(data['routines'], _routines, Routine.fromJson);
+      _decodeAndUpdateList(data['sessions'], _sessions, PracticeSession.fromJson);
+
+      notifyListeners();
+      await saveToStorage();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<void> exportDataToClipboard() async {
+    final exportData = {
+      'exercises': _exercises.map((e) => e.toJson()).toList(),
+      'routines': _routines.map((r) => r.toJson()).toList(),
+      'sessions': _sessions.map((s) => s.toJson()).toList(),
+    };
+    await Clipboard.setData(ClipboardData(text: jsonEncode(exportData)));
+  }
+
+  void _decodeAndUpdateList<T>(
+      dynamic jsonList,
+      List<T> collection,
+      T Function(Map<String, dynamic>) fromJsonFactory,
+      ) {
+    if (jsonList == null) return;
+    collection.clear();
+    collection.addAll((jsonList as List).map((json) => fromJsonFactory(json)).toList());
   }
 }
