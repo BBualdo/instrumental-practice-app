@@ -281,6 +281,19 @@ class PracticeProvider extends ChangeNotifier {
     unawaited(saveToStorage());
   }
 
+  void addManualSession(DateTime date, int durationMinutes, Instrument instrument) {
+    final session = PracticeSession(
+      id: DateTime.now().toString(),
+      date: date,
+      durationMinutes: durationMinutes,
+      instrument: instrument,
+    );
+
+    _sessions.add(session);
+    notifyListeners();
+    unawaited(saveToStorage());
+  }
+
   Future<void> saveToStorage() async {
     final prefs = await SharedPreferences.getInstance();
 

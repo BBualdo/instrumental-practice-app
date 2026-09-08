@@ -1,5 +1,4 @@
 enum Instrument {
   guitar,
-  piano,
-  other
+  piano
 }
