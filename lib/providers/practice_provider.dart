@@ -282,15 +282,33 @@ class PracticeProvider extends ChangeNotifier {
     unawaited(saveToStorage());
   }
 
-  void addManualSession(DateTime date, int durationMinutes, Instrument instrument) {
+  void addManualExerciseLog({
+    required DateTime date,
+    required String exerciseId,
+    required int durationMinutes,
+    int? statValue,
+  }) {
+    final exercise = getExerciseById(exerciseId);
+
     final session = PracticeSession(
       id: DateTime.now().toString(),
       date: date,
       durationMinutes: durationMinutes,
-      instrument: instrument,
+      instrument: exercise.instrument,
     );
-
     _sessions.add(session);
+
+    if (statValue != null) {
+      exercise.statHistory.add(StatRecord(date: date, value: statValue));
+
+      exercise.statHistory.sort((a, b) => a.date.compareTo(b.date));
+
+      exercise.lastStatistic = exercise.statHistory.last.value;
+      exercise.highestStatistic = exercise.statHistory
+          .map((e) => e.value)
+          .reduce((curr, next) => curr > next ? curr : next);
+    }
+
     notifyListeners();
     unawaited(saveToStorage());
   }

@@ -25,8 +25,137 @@ class StatsScreen extends StatelessWidget {
             ],
           ),
         ),
-        body: TabBarView(children: [_ResultsChartTab(), _TimeSpentChartTab()]),
+        body: const TabBarView(
+          children: [_ResultsChartTab(), _TimeSpentChartTab()],
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () => _showAddManualSessionDialog(context),
+          child: const Icon(Icons.add),
+        ),
       ),
+    );
+  }
+
+  Future<void> _showAddManualSessionDialog(BuildContext context) async {
+    final provider = context.read<PracticeProvider>();
+    final exercises = provider.activeExercises;
+
+    if (exercises.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No active exercises available to log.')),
+      );
+      return;
+    }
+
+    DateTime selectedDate = DateTime.now();
+    Exercise? selectedExercise = exercises.first;
+
+    final durationController = TextEditingController(
+      text: selectedExercise.durationMinutes.toString(),
+    );
+    final statController = TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Add Past Log'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Date'),
+                      subtitle: Text(
+                        DateFormat('yyyy-MM-dd').format(selectedDate),
+                      ),
+                      trailing: const Icon(Icons.calendar_today),
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: selectedDate,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime.now(),
+                        );
+                        if (picked != null) {
+                          setDialogState(() => selectedDate = picked);
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<Exercise>(
+                      isExpanded: true,
+                      initialValue: selectedExercise,
+                      decoration: const InputDecoration(labelText: 'Exercise'),
+                      items: exercises.map((e) {
+                        return DropdownMenuItem(value: e, child: Text(e.title));
+                      }).toList(),
+                      onChanged: (val) {
+                        setDialogState(() {
+                          selectedExercise = val;
+                          durationController.text =
+                              val?.durationMinutes.toString() ?? '';
+                          statController.clear();
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: durationController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Duration (minutes)',
+                      ),
+                    ),
+                    if (selectedExercise?.statisticName != null) ...[
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: statController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: selectedExercise!.statisticName,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (selectedExercise == null) return;
+
+                    final duration = int.tryParse(durationController.text);
+                    if (duration == null || duration <= 0) return;
+
+                    int? statValue;
+                    if (statController.text.isNotEmpty) {
+                      statValue = int.tryParse(statController.text);
+                    }
+
+                    context.read<PracticeProvider>().addManualExerciseLog(
+                      date: selectedDate,
+                      exerciseId: selectedExercise!.id,
+                      durationMinutes: duration,
+                      statValue: statValue,
+                    );
+
+                    Navigator.pop(dialogContext);
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -48,8 +177,8 @@ class _ResultsChartTabState extends State<_ResultsChartTab> {
     final trackableExercises = provider.exercises
         .where(
           (exercise) =>
-      exercise.statisticName != null && exercise.statHistory.isNotEmpty,
-    )
+              exercise.statisticName != null && exercise.statHistory.isNotEmpty,
+        )
         .toList();
 
     if (_selectedExercise == null && trackableExercises.isNotEmpty) {
@@ -60,49 +189,48 @@ class _ResultsChartTabState extends State<_ResultsChartTab> {
       body: trackableExercises.isEmpty
           ? const Center(child: Text('No history data.'))
           : Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            DropdownButtonFormField<Exercise>(
-              decoration: const InputDecoration(
-                labelText: 'Select Exercise',
-                border: OutlineInputBorder(),
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  DropdownButtonFormField<Exercise>(
+                    decoration: const InputDecoration(
+                      labelText: 'Select Exercise',
+                      border: OutlineInputBorder(),
+                    ),
+                    initialValue: _selectedExercise,
+                    items: trackableExercises.map((exercise) {
+                      return DropdownMenuItem<Exercise>(
+                        value: exercise,
+                        child: Text(exercise.title),
+                      );
+                    }).toList(),
+                    onChanged: (newValue) {
+                      setState(() => _selectedExercise = newValue);
+                    },
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  if (_selectedExercise != null)
+                    Text(
+                      "Last '${_selectedExercise!.statisticName}': ${_selectedExercise!.lastStatistic}",
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+
+                  const SizedBox(height: 32),
+
+                  if (_selectedExercise != null)
+                    Expanded(
+                      child: LineChart(_buildChartData(_selectedExercise!)),
+                    ),
+                ],
               ),
-              initialValue: _selectedExercise,
-              items: trackableExercises.map((exercise) {
-                return DropdownMenuItem<Exercise>(
-                  value: exercise,
-                  child: Text(exercise.title),
-                );
-              }).toList(),
-              onChanged: (newValue) {
-                setState(() => _selectedExercise = newValue);
-              },
             ),
-
-            const SizedBox(height: 32),
-
-            if (_selectedExercise != null)
-              Text(
-                "Last '${_selectedExercise!
-                    .statisticName}': ${_selectedExercise!.lastStatistic}",
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-
-            const SizedBox(height: 32),
-
-            if (_selectedExercise != null)
-              Expanded(
-                child: LineChart(_buildChartData(_selectedExercise!)),
-              ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -119,13 +247,9 @@ class _ResultsChartTabState extends State<_ResultsChartTab> {
       }
     }
 
-    final sortedDays = dailyHighest.keys.toList()
-      ..sort();
+    final sortedDays = dailyHighest.keys.toList()..sort();
 
-    final spots = sortedDays
-        .asMap()
-        .entries
-        .map((entry) {
+    final spots = sortedDays.asMap().entries.map((entry) {
       return FlSpot(
         entry.key.toDouble(),
         dailyHighest[entry.value]!.toDouble(),
@@ -237,15 +361,16 @@ class _TimeSpentChartTabState extends State<_TimeSpentChartTab> {
     final filteredSessions = allSessions.where((s) {
       final sessionDate = DateTime(s.date.year, s.date.month, s.date.day);
       final isDateValid = sessionDate.isAfter(
-          startDate!.subtract(const Duration(days: 1)));
-      final isInstrumentValid = _selectedInstrument == null ||
-          s.instrument == _selectedInstrument;
+        startDate!.subtract(const Duration(days: 1)),
+      );
+      final isInstrumentValid =
+          _selectedInstrument == null || s.instrument == _selectedInstrument;
       return isDateValid && isInstrumentValid;
     }).toList();
 
     final totalMinutes = filteredSessions.fold(
       0,
-          (sum, session) => sum + session.durationMinutes,
+      (sum, session) => sum + session.durationMinutes,
     );
     final hours = totalMinutes ~/ 60;
     final minutes = totalMinutes % 60;
@@ -265,8 +390,10 @@ class _TimeSpentChartTabState extends State<_TimeSpentChartTab> {
               items: [
                 const DropdownMenuItem(value: null, child: Text('All')),
                 for (final instrument in Instrument.values)
-                  DropdownMenuItem(value: instrument,
-                      child: Text(capitalizeString(instrument.name))),
+                  DropdownMenuItem(
+                    value: instrument,
+                    child: Text(capitalizeString(instrument.name)),
+                  ),
               ],
               onChanged: (Instrument? instrument) {
                 setState(() {
@@ -346,13 +473,13 @@ class _TimeSpentChartTabState extends State<_TimeSpentChartTab> {
     );
   }
 
-  BarChartData _createChartData(List<PracticeSession> sessions,
-      DateTime startDate,
-      DateTime endDate,) {
+  BarChartData _createChartData(
+    List<PracticeSession> sessions,
+    DateTime startDate,
+    DateTime endDate,
+  ) {
     final Map<DateTime, int> dailyMinutes = {};
-    final int daysCount = endDate
-        .difference(startDate)
-        .inDays + 1;
+    final int daysCount = endDate.difference(startDate).inDays + 1;
 
     for (int i = 0; i < daysCount; i++) {
       dailyMinutes[startDate.add(Duration(days: i))] = 0;
@@ -370,8 +497,7 @@ class _TimeSpentChartTabState extends State<_TimeSpentChartTab> {
       }
     }
 
-    final sortedDays = dailyMinutes.keys.toList()
-      ..sort();
+    final sortedDays = dailyMinutes.keys.toList()..sort();
     final maxValue = dailyMinutes.values.isEmpty
         ? 0
         : dailyMinutes.values.reduce((curr, next) => curr > next ? curr : next);
@@ -428,10 +554,7 @@ class _TimeSpentChartTabState extends State<_TimeSpentChartTab> {
       ),
       gridData: const FlGridData(show: false),
       borderData: FlBorderData(show: false),
-      barGroups: sortedDays
-          .asMap()
-          .entries
-          .map((entry) {
+      barGroups: sortedDays.asMap().entries.map((entry) {
         return BarChartGroupData(
           x: entry.key,
           barRods: [
