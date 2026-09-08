@@ -229,6 +229,17 @@ class PracticeProvider extends ChangeNotifier {
     unawaited(saveToStorage());
   }
 
+  void resetRoutine(String routineId) {
+    final exercises = getExercisesForRoutine(routineId);
+
+    for (var exercise in exercises) {
+      exercise.isCompleted = false;
+    }
+
+    notifyListeners();
+    unawaited(saveToStorage());
+  }
+
   void finishRoutine(String routineId) {
     final routine = getRoutineById(routineId);
     final exercises = getExercisesForRoutine(routineId);

@@ -25,7 +25,7 @@ class RoutineDetailsScreen extends StatelessWidget {
         actions: [
           IconButton(
             onPressed: () {
-              context.read<PracticeProvider>().finishRoutine(routineId);
+              context.read<PracticeProvider>().resetRoutine(routineId);
             },
             icon: Icon(Icons.restart_alt),
             tooltip: 'Reset Progress',
