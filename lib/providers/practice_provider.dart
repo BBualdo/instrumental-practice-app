@@ -185,6 +185,15 @@ class PracticeProvider extends ChangeNotifier {
     unawaited(saveToStorage());
   }
 
+  void cloneRoutine(String routineId) {
+    final routine = getRoutineById(routineId);
+    final clonedRoutine = Routine.clone(routine);
+
+    _routines.add(clonedRoutine);
+    notifyListeners();
+    unawaited(saveToStorage());
+  }
+
   List<Exercise> getExercisesForRoutine(String routineId) {
     final routine = getRoutineById(routineId);
 

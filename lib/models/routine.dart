@@ -32,4 +32,14 @@ class Routine {
       isActive: json['isActive'] ?? true,
     );
   }
+
+  factory Routine.clone(Routine other) {
+    return Routine(
+      id: DateTime.now().toString(),
+      title: '${other.title} (Clone)',
+      instrument: other.instrument,
+      exerciseIds: other.exerciseIds,
+      isActive: other.isActive,
+    );
+  }
 }
