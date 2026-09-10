@@ -64,7 +64,7 @@ class PracticeProvider extends ChangeNotifier {
     );
 
     _exercises.add(newExercise);
-
+    _sortExercises();
     notifyListeners();
     unawaited(saveToStorage());
   }
@@ -84,6 +84,7 @@ class PracticeProvider extends ChangeNotifier {
     if (index != -1) {
       _exercises[index].isActive = true;
 
+      _sortExercises();
       notifyListeners();
       unawaited(saveToStorage());
     }
@@ -129,6 +130,7 @@ class PracticeProvider extends ChangeNotifier {
     final index = _exercises.indexWhere((exercise) => exercise.id == id);
     _exercises[index] = updatedExercise;
 
+    _sortExercises();
     notifyListeners();
     unawaited(saveToStorage());
   }
@@ -138,6 +140,7 @@ class PracticeProvider extends ChangeNotifier {
     final clonedExercise = Exercise.clone(exercise);
     _exercises.add(clonedExercise);
 
+    _sortExercises();
     notifyListeners();
     unawaited(saveToStorage());
   }
@@ -157,6 +160,7 @@ class PracticeProvider extends ChangeNotifier {
 
     _routines.add(newRoutine);
 
+    _sortRoutines();
     notifyListeners();
     unawaited(saveToStorage());
   }
@@ -173,6 +177,7 @@ class PracticeProvider extends ChangeNotifier {
     final index = _routines.indexWhere((routine) => routine.id == routineId);
     _routines[index].isActive = true;
 
+    _sortRoutines();
     notifyListeners();
     unawaited(saveToStorage());
   }
@@ -190,6 +195,7 @@ class PracticeProvider extends ChangeNotifier {
     final clonedRoutine = Routine.clone(routine);
 
     _routines.add(clonedRoutine);
+    _sortRoutines();
     notifyListeners();
     unawaited(saveToStorage());
   }
@@ -363,6 +369,12 @@ class PracticeProvider extends ChangeNotifier {
     final List decoded = jsonDecode(jsonString);
     collection.clear();
     collection.addAll(decoded.map((json) => fromJsonFactory(json)).toList());
+
+    if (T == Exercise) {
+      _sortExercises();
+    } else if (T == Routine) {
+      _sortRoutines();
+    }
   }
 
   Future<bool> importDataFromJson(String jsonString) async {
@@ -398,5 +410,19 @@ class PracticeProvider extends ChangeNotifier {
     if (jsonList == null) return;
     collection.clear();
     collection.addAll((jsonList as List).map((json) => fromJsonFactory(json)).toList());
+
+    if (T == Exercise) {
+      _sortExercises();
+    } else if (T == Routine) {
+      _sortRoutines();
+    }
+  }
+
+  void _sortExercises() {
+    _exercises.sort((a, b) => a.title.compareTo(b.title));
+  }
+
+  void _sortRoutines() {
+    _routines.sort((a, b) => a.title.compareTo(b.title));
   }
 }
