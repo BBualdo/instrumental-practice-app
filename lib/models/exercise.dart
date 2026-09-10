@@ -69,4 +69,16 @@ class Exercise {
           [],
     );
   }
+
+  factory Exercise.clone(Exercise other) {
+    return Exercise(
+      id: DateTime.now().toString(),
+      title: '${other.title} (Clone)',
+      description: other.description,
+      durationMinutes: other.durationMinutes,
+      relatedLink: other.relatedLink,
+      statisticName: other.statisticName,
+      instrument: other.instrument,
+    );
+  }
 }

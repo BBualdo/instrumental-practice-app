@@ -55,22 +55,39 @@ class _ActiveExercisesTab extends StatelessWidget {
 
         return Dismissible(
           key: ValueKey(exercise.id),
-          direction: DismissDirection.endToStart,
+          direction: DismissDirection.horizontal,
           background: Container(
+            color: Colors.blue.withValues(alpha: 0.2),
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.only(left: 20),
+            child: const Icon(Icons.copy, color: Colors.blue),
+          ),
+          secondaryBackground: Container(
             color: Colors.red.withValues(alpha: 0.2),
             alignment: Alignment.centerRight,
             padding: const EdgeInsets.only(right: 20),
-            child: const Icon(Icons.archive, color: Colors.white),
+            child: const Icon(Icons.archive, color: Colors.red),
           ),
-          onDismissed: (direction) {
-            context.read<PracticeProvider>().archiveExercise(exercise.id);
+          confirmDismiss: (direction) async {
+            if (direction == DismissDirection.endToStart) {
+              context.read<PracticeProvider>().archiveExercise(exercise.id);
 
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('${exercise.title} has been archived.')),
-            );
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('${exercise.title} has been archived.')),
+              );
+
+              return true;
+            } else {
+              context.read<PracticeProvider>().cloneExercise(exercise.id);
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('${exercise.title} has been cloned.')),
+              );
+
+              return false;
+            }
           },
           child: ListTile(
-            // Zmiana ikony na Emoji dla gitary
             leading: exercise.instrument.name == 'piano'
                 ? const Icon(Icons.piano, size: 32)
                 : const Text('🎸', style: TextStyle(fontSize: 26)),
@@ -80,12 +97,11 @@ class _ActiveExercisesTab extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
 
-            // Nowoczesny Subtitle z tagami
             subtitle: Padding(
               padding: const EdgeInsets.only(top: 8.0),
               child: Wrap(
-                spacing: 16.0, // Odstęp w poziomie
-                runSpacing: 6.0, // Odstęp w pionie przy zawijaniu
+                spacing: 16.0,
+                runSpacing: 6.0,
                 children: [
                   Row(
                     mainAxisSize: MainAxisSize.min,

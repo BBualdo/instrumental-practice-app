@@ -133,6 +133,15 @@ class PracticeProvider extends ChangeNotifier {
     unawaited(saveToStorage());
   }
 
+  void cloneExercise(String exerciseId) {
+    final exercise = getExerciseById(exerciseId);
+    final clonedExercise = Exercise.clone(exercise);
+    _exercises.add(clonedExercise);
+
+    notifyListeners();
+    unawaited(saveToStorage());
+  }
+
   void addRoutine(
     String title,
     Instrument instrument,
